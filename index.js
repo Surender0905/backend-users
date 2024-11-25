@@ -1,49 +1,26 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const sequelize = require("./lib/sequelize");
+const User = require("./models/user");
 
 const app = express();
 
+app.use(express.json());
+
 app.use(cors());
 
-//dummy data
+//sync database
+sequelize
+    .sync()
+    .then(function () {
+        console.log("Database synced");
+    })
+    .catch(function (err) {
+        console.log("Unable to connect to the database:", err);
+    });
 
-const users = [
-    {
-        id: 1,
-        username: "octocat",
-        name: "The Octocat",
-        repoCount: 8,
-        location: "San Francisco",
-    },
-    {
-        id: 2,
-        username: "torvalds",
-        name: "Linus Torvalds",
-        repoCount: 25,
-        location: "Portland",
-    },
-    {
-        id: 3,
-        username: "gaearon",
-        name: "Dan Abramov",
-        repoCount: 50,
-        location: "London",
-    },
-    {
-        id: 4,
-        username: "addyosmani",
-        name: "Addy Osmani",
-        repoCount: 42,
-        location: "Mountain View",
-    },
-    {
-        id: 5,
-        username: "tj",
-        name: "TJ Holowaychuk",
-        repoCount: 150,
-        location: "Victoria",
-    },
-];
+//dummy data
 
 const games = [
     {
@@ -129,14 +106,24 @@ app.get("/", (req, res) => {
     res.send("Hello World!");
 });
 
-app.get("/users", (req, res) => {
-    res.send({ users });
+app.get("/users", async (req, res) => {
+    try {
+        const user = await User.findAll();
+        res.send({ user });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ error });
+    }
 });
 
-app.get("/users/:id", (req, res) => {
-    const id = req.params.id;
-    const user = users.find((user) => user.id == id);
-    res.send({ user });
+app.get("/users/:id", async (req, res) => {
+    try {
+        const user = await User.findByPk(req.params.id);
+        res.send({ user });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ error });
+    }
 });
 
 app.get("/games", (req, res) => {
